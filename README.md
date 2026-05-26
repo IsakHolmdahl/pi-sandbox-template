@@ -5,7 +5,7 @@ The only things added are specific information for my setup in the README.
 So, to use this simply run this:
 
 ```bash
-sbx run -t ghcr.io/geut/sbx-shell-pi:node24 shell [PROJECT_DIR]
+sbx run -t ghcr.io/isakholmdahl/pi-sandbox-template:latest shell [PROJECT_DIR]
 ```
 
 Then to add env vars, you can do:
