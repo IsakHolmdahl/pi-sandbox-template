@@ -1,4 +1,4 @@
-FROM docker/sandbox-templates:docker-shell
+FROM docker/sandbox-templates:shell-docker
 
 USER root
 
@@ -21,7 +21,22 @@ USER agent
 RUN mkdir -p "$HOME/.npm-global" \
   && npm config set prefix "$HOME/.npm-global" \
   && printf '\n\# npm user-global prefix\nexport PATH="$HOME/.npm-global/bin:$PATH"\n' >> ~/.bashrc \
-  && npm install -g @mariozechner/pi-coding-agent@latest 
+  && npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 
-RUN printf '\n\# Auto-launch pi coding agent in interactive shells\nif [[ $- == *i* ]] && command -v pi &> /dev/null; then\n    exec pi\nfi\n' >> ~/.bashrc
+RUN mkdir -p /home/agent/.pi/agent \
+  && printf '\n\# Auto-launch pi coding agent in interactive shells\nif [[ $- == *i* ]] && command -v pi &> /dev/null; then\n    exec pi\nfi\n' >> ~/.bashrc
 
+COPY --chown=agent:agent pi-packages.txt /home/agent/.pi-packages.txt
+COPY --chown=agent:agent web-search.json /home/agent/web-search.json
+COPY --chown=agent:agent mcp.json /home/agent/mcp.json
+COPY --chown=agent:agent APPEND_SYSTEM.md /home/agent/APPEND_SYSTEM.md
+
+# Pre-install pi packages listed in pi-packages.txt so they're baked into the image
+RUN while IFS= read -r pkg || [ -n "$pkg" ]; do \
+    [ -z "$pkg" ] && continue; \
+    echo "Installing pi package: $pkg"; \
+    pi install "$pkg"; \
+  done < /home/agent/.pi-packages.txt
+
+ENV PLANNOTATOR_REMOTE=1
+ENV PLANNOTATOR_PORT=1414
